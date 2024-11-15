@@ -61,8 +61,15 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        transform: translate(-50%, 10px);
+        transform: translate(-4px, 10px);
         position: absolute;
+      }
+
+      #chart .touch-link {
+        position: absolute;
+        height: 2px;
+        background-color: #444;
+        transform: translate(0, 13px);
       }
 
       #chart .touch.time {
@@ -156,7 +163,7 @@
           TIME_MARGIN;
         const duration = end - start;
 
-        for (const type of ["event", "time"]) {
+        for (const type of ["time", "event"]) {
           for (const raf of sessionEventLog[type].raf) {
             const rafDiv = document.createElement("div");
             rafDiv.className = `raf ${type}`;
@@ -172,11 +179,25 @@
             eventDiv.style.top = top;
             eventDiv.textContent = event;
             chart.appendChild(eventDiv);
-            for (const time of sessionEventLog[type][event]) {
+            const totalTouches = sessionEventLog[type][event].length;
+            for (let i = 0; i < totalTouches; i++) {
+              const time = sessionEventLog[type][event][i];
+              const left = ((time - start) / duration) * 100;
+              if (type === "time") {
+                const eventTime = sessionEventLog.event[event][i];
+                const linkDiv = document.createElement("div");
+                linkDiv.className = `touch-link`;
+                linkDiv.style.top = top;
+                linkDiv.style.left = `${left}%`;
+                linkDiv.style.width = `${
+                  (((eventTime - start) / duration) * 100) - left
+                }%`;
+                chart.appendChild(linkDiv);
+              }
               const eventDiv = document.createElement("div");
               eventDiv.className = `touch ${type} ${event}`;
               eventDiv.style.top = top;
-              eventDiv.style.left = `${((time - start) / duration) * 100}%`;
+              eventDiv.style.left = `${left}%`;
               chart.appendChild(eventDiv);
             }
           }
