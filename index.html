@@ -25,14 +25,23 @@
         font-weight: 500;
       }
 
-      #chart {
+      #chart-container {
         width: 100%;
         height: 230px;
         background-color: #222;
         position: relative;
       }
 
-      #chart .label {
+      #chart {
+        position: absolute;
+        overflow-x: scroll;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+
+      #chart-container .label {
         position: absolute;
         color: #555;
         font-size: 0.8em;
@@ -103,13 +112,18 @@
   </head>
   <body>
     <h1>Touch rAF Tester</h1>
-    <div id="chart"></div>
+    <div id="chart-container">
+      <div id="chart"></div>
+    </div>
     <div id="tap">Tap Here</div>
 
     <script>
+      const chartContainer = document.getElementById("chart-container");
       const chart = document.getElementById("chart");
+      const tap = document.getElementById("tap");
 
       const TIME_MARGIN = 20;
+      const TIME_SCALE = 8;
       let lastRafTime = 0;
       let lastRafEvent = 0;
       const events = [
@@ -121,12 +135,21 @@
         "pointerleave",
         "pointerout",
       ];
+      const totalEvents = events.length;
       const sessionEventLog = {
         time: {},
         event: {},
       };
       let isSessionActive = false;
       let sessionEndTimer = null;
+      for (const event of events) {
+          const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
+          const eventDiv = document.createElement("div");
+          eventDiv.className = `label`;
+          eventDiv.style.top = top;
+          eventDiv.textContent = event;
+          chartContainer.appendChild(eventDiv);
+      }
       function startSession() {
         sessionEventLog.time.raf = [lastRafTime];
         sessionEventLog.event.raf = [lastRafEvent];
@@ -163,39 +186,31 @@
           for (const raf of sessionEventLog[type].raf) {
             const rafDiv = document.createElement("div");
             rafDiv.className = `raf ${type}`;
-            rafDiv.style.left = `${((raf - start) / duration) * 100}%`;
+            rafDiv.style.left = `${(raf - start) * TIME_SCALE}px`;
             chart.appendChild(rafDiv);
           }
         }
 
-        for (const type of ["time", "event"]) {
-          const totalEvents = events.length;
-          for (const event of events) {
-            const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
-            const eventDiv = document.createElement("div");
-            eventDiv.className = `label`;
-            eventDiv.style.top = top;
-            eventDiv.textContent = event;
-            chart.appendChild(eventDiv);
-            const totalTouches = sessionEventLog[type][event].length;
-            for (let i = 0; i < totalTouches; i++) {
-              const time = sessionEventLog[type][event][i];
-              const left = ((time - start) / duration) * 100;
-              if (type === "time") {
-                const eventTime = sessionEventLog.event[event][i];
-                const linkDiv = document.createElement("div");
-                linkDiv.className = `touch-link`;
-                linkDiv.style.top = top;
-                linkDiv.style.left = `${left}%`;
-                linkDiv.style.width = `${
-                  ((eventTime - start) / duration) * 100 - left
-                }%`;
-                chart.appendChild(linkDiv);
-              }
+        for (const event of events) {
+          const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
+          const totalTouches = sessionEventLog.time[event].length;
+          for (let i = 0; i < totalTouches; i++) {
+            const t1 = sessionEventLog.time[event][i];
+            const t2 = sessionEventLog.event[event][i];
+            const linkDiv = document.createElement("div");
+            linkDiv.className = `touch-link`;
+            linkDiv.style.top = top;
+            linkDiv.style.left = `${(t1 - start) * TIME_SCALE}px`;
+            linkDiv.style.width = `${(t2 - t1) * TIME_SCALE}px`;
+            chart.appendChild(linkDiv);
+          }
+          for (const type of ["time", "event"]) {
+            for (const time of sessionEventLog[type][event]) {
               const eventDiv = document.createElement("div");
               eventDiv.className = `touch ${type} ${event}`;
               eventDiv.style.top = top;
-              eventDiv.style.left = `${left}%`;
+              console.log(time - start);
+              eventDiv.style.left = `${(time - start) * TIME_SCALE}px`;
               chart.appendChild(eventDiv);
             }
           }
@@ -213,32 +228,29 @@
       });
 
       for (const event of events) {
-        document.body.addEventListener(
-          event,
-          function (e) {
-            e.preventDefault();
-            if (event === "pointerdown") {
-              if (!isSessionActive) {
-                startSession();
-              }
-            } else if (
-              event === "pointerup" ||
-              event === "pointercancel" ||
-              event === "pointerleave" ||
-              event === "pointerout"
-            ) {
-              if (sessionEndTimer) {
-                clearTimeout(sessionEndTimer);
-              }
-              sessionEndTimer = setTimeout(endSession, 20);
+        tap.addEventListener(event, function (e) {
+          e.preventDefault();
+          if (event === "pointerdown") {
+            if (!isSessionActive) {
+              startSession();
             }
-            if (isSessionActive) {
-              const now = performance.now();
-              sessionEventLog.event[event].push(now);
-              sessionEventLog.time[event].push(e.timeStamp);
+          } else if (
+            event === "pointerup" ||
+            event === "pointercancel" ||
+            event === "pointerleave" ||
+            event === "pointerout"
+          ) {
+            if (sessionEndTimer) {
+              clearTimeout(sessionEndTimer);
             }
+            sessionEndTimer = setTimeout(endSession, 20);
           }
-        );
+          if (isSessionActive) {
+            const now = performance.now();
+            sessionEventLog.event[event].push(now);
+            sessionEventLog.time[event].push(e.timeStamp);
+          }
+        });
       }
     </script>
   </body>
