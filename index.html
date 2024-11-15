@@ -41,7 +41,7 @@
         margin-top: 1em;
       }
 
-      #chart .raf-time, #chart .raf-event {
+      #chart .raf {
         width: 2px;
         height: 100%;
         position: absolute;
@@ -49,9 +49,9 @@
         transform: translate(-50%, 0);
       }
 
-      #chart .raf-event {
+      #chart .raf.raf-event {
         width: 1px;
-        background-color: #404040;
+        background-color: #40404088;
       }
 
       #chart .event {
@@ -145,7 +145,7 @@
         for (const rafType of ["raf-event", "raf-time"]) {
           for (const raf of sessionEventLog[rafType]) {
             const rafDiv = document.createElement("div");
-            rafDiv.className = rafType;
+            rafDiv.className = `raf ${rafType}`;
             rafDiv.style.left = `${((raf - start) / duration) * 100}%`;
             chart.appendChild(rafDiv);
           }
