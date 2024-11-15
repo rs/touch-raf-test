@@ -170,7 +170,9 @@
             rafDiv.style.left = `${((raf - start) / duration) * 100}%`;
             chart.appendChild(rafDiv);
           }
+        }
 
+        for (const type of ["time", "event"]) {
           const totalEvents = events.length;
           for (const event of events) {
             const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
