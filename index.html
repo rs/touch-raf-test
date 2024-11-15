@@ -42,24 +42,31 @@
       }
 
       #chart .raf {
-        width: 2px;
         height: 100%;
         position: absolute;
-        background-color: #444;
         transform: translate(-50%, 0);
       }
 
-      #chart .raf.raf-event {
+      #chart .raf.time {
+        width: 2px;
+        background-color: #444;
+      }
+
+      #chart .raf.event {
         width: 1px;
         background-color: #40404088;
       }
 
-      #chart .event {
+      #chart .touch {
         width: 8px;
         height: 8px;
         border-radius: 50%;
         transform: translate(-50%, 10px);
         position: absolute;
+      }
+
+      #chart .touch.time {
+        background-color: #444;
       }
 
       #chart .pointerdown {
@@ -100,6 +107,7 @@
     <script>
       const chart = document.getElementById("chart");
 
+      const TIME_MARGIN = 20;
       let lastRafTime = 0;
       let lastRafEvent = 0;
       const events = [
@@ -110,14 +118,18 @@
         "touchmove",
         "touchend",
       ];
-      const sessionEventLog = {};
+      const sessionEventLog = {
+        time: {},
+        event: {},
+      };
       let isSessionActive = false;
       let sessionEndTimer = null;
       function startSession() {
-        sessionEventLog['raf-time'] = [lastRafTime];
-        sessionEventLog['raf-event'] = [lastRafEvent];
+        sessionEventLog.time.raf = [lastRafTime];
+        sessionEventLog.event.raf = [lastRafEvent];
         for (const event of events) {
-          sessionEventLog[event] = [];
+          sessionEventLog.time[event] = [];
+          sessionEventLog.event[event] = [];
         }
         isSessionActive = true;
       }
@@ -138,33 +150,35 @@
           chart.removeChild(chart.firstChild);
         }
 
-        const start = sessionEventLog['raf-event'][0] - 10;
-        const end = sessionEventLog['raf-event'][sessionEventLog['raf-event'].length - 1] + 10;
+        const start = sessionEventLog.event.raf[0] - TIME_MARGIN;
+        const end =
+          sessionEventLog.event.raf[sessionEventLog.event.raf.length - 1] +
+          TIME_MARGIN;
         const duration = end - start;
 
-        for (const rafType of ["raf-event", "raf-time"]) {
-          for (const raf of sessionEventLog[rafType]) {
+        for (const type of ["event", "time"]) {
+          for (const raf of sessionEventLog[type].raf) {
             const rafDiv = document.createElement("div");
-            rafDiv.className = `raf ${rafType}`;
+            rafDiv.className = `raf ${type}`;
             rafDiv.style.left = `${((raf - start) / duration) * 100}%`;
             chart.appendChild(rafDiv);
           }
-        }
 
-        const totalEvents = events.length;
-        for (const event of events) {
-          const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
-          const eventDiv = document.createElement("div");
-          eventDiv.className = `label`;
-          eventDiv.style.top = top;
-          eventDiv.textContent = event;
-          chart.appendChild(eventDiv);
-          for (const time of sessionEventLog[event]) {
+          const totalEvents = events.length;
+          for (const event of events) {
+            const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
             const eventDiv = document.createElement("div");
-            eventDiv.className = `event ${event}`;
+            eventDiv.className = `label`;
             eventDiv.style.top = top;
-            eventDiv.style.left = `${((time - start) / duration) * 100}%`;
+            eventDiv.textContent = event;
             chart.appendChild(eventDiv);
+            for (const time of sessionEventLog[type][event]) {
+              const eventDiv = document.createElement("div");
+              eventDiv.className = `touch ${type} ${event}`;
+              eventDiv.style.top = top;
+              eventDiv.style.left = `${((time - start) / duration) * 100}%`;
+              chart.appendChild(eventDiv);
+            }
           }
         }
       }
@@ -173,13 +187,12 @@
         lastRafEvent = performance.now();
         lastRafTime = time;
         if (isSessionActive) {
-          sessionEventLog['raf-event'].push(lastRafEvent);
-          sessionEventLog['raf-time'].push(time);
+          sessionEventLog.event.raf.push(lastRafEvent);
+          sessionEventLog.time.raf.push(time);
         }
         requestAnimationFrame(rAF);
       });
 
-      // Prevent default behavior for touch and pointer events to avoid scrolling
       for (const event of events) {
         document.body.addEventListener(
           event,
@@ -197,7 +210,8 @@
             }
             if (isSessionActive) {
               const now = performance.now();
-              sessionEventLog[event].push(now);
+              sessionEventLog.event[event].push(now);
+              sessionEventLog.time[event].push(e.timeStamp);
             }
           },
           { passive: false }
