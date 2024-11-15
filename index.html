@@ -1,182 +1,198 @@
-<style>
-  body {
-    margin: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    font: 16px/1.5 sans-serif;
-    background-color: #333;
-    color: white;
-    overflow: hidden; /* Prevent scrolling */
-  }
-
-  h1 {
-    text-align: center;
-    font-weight: 500;
-  }
-
-  #chart {
-    margin-top: 10%;
-    width: 100%;
-    height: 200px;
-    background-color: #222;
-    position: relative;
-  }
-
-  #chart .label {
-    position: absolute;
-    color: #555;
-    font-size: 0.8em;
-    width: 100%;
-    border-bottom: 1px solid #333;
-    margin-top: 1em;
-  }
-
-  #chart .raf {
-    width: 2px;
-    height: 100%;
-    position: absolute;
-    background-color: #444;
-    transform: translate(-50%, 0);
-  }
-
-  #chart .event {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    transform: translate(-50%, 10px);
-    position: absolute;
-  }
-
-  #chart .pointerdown {
-    background-color: greenyellow;
-  }
-  #chart .pointermove {
-    background-color: lightpink;
-  }
-  #chart .pointerup {
-    background-color: lightcoral;
-  }
-  #chart .touchstart {
-    background-color: greenyellow;
-  }
-  #chart .touchmove {
-    background-color: lightpink;
-  }
-  #chart .touchend {
-    background-color: lightcoral;
-  }
-
-  #tap {
-    width: 100%;
-    display: flex;
-    flex-grow: 1;
-    justify-content: center;
-    align-items: center;
-    font-size: 2em;
-    user-select: none;
-  }
-</style>
-
-<h1>Touch rAF Tester</h1>
-<div id="chart"></div>
-<div id="tap">Tap Here</div>
-
-<script>
-  const chart = document.getElementById("chart");
-
-  let lastRaf = 0;
-  const events = [
-    "pointerdown",
-    "pointermove",
-    "pointerup",
-    "touchstart",
-    "touchmove",
-    "touchend",
-  ];
-  const sessionEventLog = {};
-  let isSessionActive = false;
-  let sessionEndTimer = null;
-  function startSession() {
-    sessionEventLog.raf = [lastRaf];
-    for (const event of events) {
-      sessionEventLog[event] = [];
-    }
-    isSessionActive = true;
-  }
-  function endSession() {
-    if (!isSessionActive) {
-      return;
-    }
-    isSessionActive = false;
-    if (sessionEndTimer) {
-      clearTimeout(sessionEndTimer);
-      sessionEndTimer = null;
-    }
-    renderSession();
-  }
-
-  function renderSession() {
-    while (chart.firstChild) {
-      chart.removeChild(chart.firstChild);
-    }
-
-    const start = sessionEventLog.raf[0] - 10;
-    const end = sessionEventLog.raf[sessionEventLog.raf.length - 1] + 10;
-    const duration = end - start;
-
-    for (const raf of sessionEventLog.raf) {
-      const rafDiv = document.createElement("div");
-      rafDiv.className = "raf";
-      rafDiv.style.left = `${((raf - start) / duration) * 100}%`;
-      chart.appendChild(rafDiv);
-    }
-
-    const totalEvents = events.length;
-    for (const event of events) {
-      const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
-      const eventDiv = document.createElement("div");
-      eventDiv.className = `label`;
-      eventDiv.style.top = top;
-      eventDiv.textContent = event;
-      chart.appendChild(eventDiv);
-      for (const time of sessionEventLog[event]) {
-        const eventDiv = document.createElement("div");
-        eventDiv.className = `event ${event}`;
-        eventDiv.style.top = top;
-        eventDiv.style.left = `${((time - start) / duration) * 100}%`;
-        chart.appendChild(eventDiv);
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Touch rAF Tester</title>
+    <style>
+      body {
+        margin: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        font: 16px/1.5 sans-serif;
+        background-color: #333;
+        color: white;
+        overflow: hidden; /* Prevent scrolling */
       }
-    }
-  }
 
-  requestAnimationFrame(function rAF(time) {
-    lastRaf = time;
-    if (isSessionActive) {
-      sessionEventLog.raf.push(time);
-    }
-    requestAnimationFrame(rAF);
-  });
+      h1 {
+        text-align: center;
+        font-weight: 500;
+      }
 
-  // Prevent default behavior for touch and pointer events to avoid scrolling
-  for (const event of events) {
-    document.body.addEventListener(event, function (e) {
-      e.preventDefault();
-      if (event === "pointerdown" || event === "touchstart") {
-        if (!isSessionActive) {
-          startSession();
+      #chart {
+        margin-top: 10%;
+        width: 100%;
+        height: 200px;
+        background-color: #222;
+        position: relative;
+      }
+
+      #chart .label {
+        position: absolute;
+        color: #555;
+        font-size: 0.8em;
+        width: 100%;
+        border-bottom: 1px solid #333;
+        margin-top: 1em;
+      }
+
+      #chart .raf {
+        width: 2px;
+        height: 100%;
+        position: absolute;
+        background-color: #444;
+        transform: translate(-50%, 0);
+      }
+
+      #chart .event {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        transform: translate(-50%, 10px);
+        position: absolute;
+      }
+
+      #chart .pointerdown {
+        background-color: greenyellow;
+      }
+      #chart .pointermove {
+        background-color: lightpink;
+      }
+      #chart .pointerup {
+        background-color: lightcoral;
+      }
+      #chart .touchstart {
+        background-color: greenyellow;
+      }
+      #chart .touchmove {
+        background-color: lightpink;
+      }
+      #chart .touchend {
+        background-color: lightcoral;
+      }
+
+      #tap {
+        width: 100%;
+        display: flex;
+        flex-grow: 1;
+        justify-content: center;
+        align-items: center;
+        font-size: 2em;
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Touch rAF Tester</h1>
+    <div id="chart"></div>
+    <div id="tap">Tap Here</div>
+
+    <script>
+      const chart = document.getElementById("chart");
+
+      let lastRaf = 0;
+      const events = [
+        "pointerdown",
+        "pointermove",
+        "pointerup",
+        "touchstart",
+        "touchmove",
+        "touchend",
+      ];
+      const sessionEventLog = {};
+      let isSessionActive = false;
+      let sessionEndTimer = null;
+      function startSession() {
+        sessionEventLog.raf = [lastRaf];
+        for (const event of events) {
+          sessionEventLog[event] = [];
         }
-      } else if (event === "pointerup" || event === "touchend") {
+        isSessionActive = true;
+      }
+      function endSession() {
+        if (!isSessionActive) {
+          return;
+        }
+        isSessionActive = false;
         if (sessionEndTimer) {
           clearTimeout(sessionEndTimer);
+          sessionEndTimer = null;
         }
-        sessionEndTimer = setTimeout(endSession, 20);
+        renderSession();
       }
-      if (isSessionActive) {
-        const now = performance.now();
-        sessionEventLog[event].push(now);
+
+      function renderSession() {
+        while (chart.firstChild) {
+          chart.removeChild(chart.firstChild);
+        }
+
+        const start = sessionEventLog.raf[0] - 10;
+        const end = sessionEventLog.raf[sessionEventLog.raf.length - 1] + 10;
+        const duration = end - start;
+
+        for (const raf of sessionEventLog.raf) {
+          const rafDiv = document.createElement("div");
+          rafDiv.className = "raf";
+          rafDiv.style.left = `${((raf - start) / duration) * 100}%`;
+          chart.appendChild(rafDiv);
+        }
+
+        const totalEvents = events.length;
+        for (const event of events) {
+          const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
+          const eventDiv = document.createElement("div");
+          eventDiv.className = `label`;
+          eventDiv.style.top = top;
+          eventDiv.textContent = event;
+          chart.appendChild(eventDiv);
+          for (const time of sessionEventLog[event]) {
+            const eventDiv = document.createElement("div");
+            eventDiv.className = `event ${event}`;
+            eventDiv.style.top = top;
+            eventDiv.style.left = `${((time - start) / duration) * 100}%`;
+            chart.appendChild(eventDiv);
+          }
+        }
       }
-    }, { passive: false });
-  }
-</script>
+
+      requestAnimationFrame(function rAF(time) {
+        lastRaf = time;
+        if (isSessionActive) {
+          sessionEventLog.raf.push(time);
+        }
+        requestAnimationFrame(rAF);
+      });
+
+      // Prevent default behavior for touch and pointer events to avoid scrolling
+      for (const event of events) {
+        document.body.addEventListener(
+          event,
+          function (e) {
+            e.preventDefault();
+            if (event === "pointerdown" || event === "touchstart") {
+              if (!isSessionActive) {
+                startSession();
+              }
+            } else if (event === "pointerup" || event === "touchend") {
+              if (sessionEndTimer) {
+                clearTimeout(sessionEndTimer);
+              }
+              sessionEndTimer = setTimeout(endSession, 20);
+            }
+            if (isSessionActive) {
+              const now = performance.now();
+              sessionEventLog[event].push(now);
+            }
+          },
+          { passive: false }
+        );
+      }
+    </script>
+  </body>
+</html>
