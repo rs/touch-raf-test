@@ -27,7 +27,7 @@
 
       #chart-container {
         width: 100%;
-        height: 230px;
+        height: 190px;
         background-color: #222;
         position: relative;
       }
@@ -48,7 +48,7 @@
         font-size: 0.8em;
         width: 100%;
         border-bottom: 1px solid #333;
-        margin-top: 1em;
+        margin-top: 20px;
       }
 
       #chart .raf {
@@ -132,9 +132,6 @@
         "pointermove",
         "pointerrawupdate",
         "pointerup",
-        "pointercancel",
-        "pointerleave",
-        "pointerout",
       ];
       const totalEvents = events.length;
       const sessionEventLog = {
@@ -144,12 +141,12 @@
       let isSessionActive = false;
       let sessionEndTimer = null;
       for (const event of events) {
-          const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
-          const eventDiv = document.createElement("div");
-          eventDiv.className = `label`;
-          eventDiv.style.top = top;
-          eventDiv.textContent = event;
-          chartContainer.appendChild(eventDiv);
+        const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
+        const eventDiv = document.createElement("div");
+        eventDiv.className = `label`;
+        eventDiv.style.top = top;
+        eventDiv.textContent = event;
+        chartContainer.appendChild(eventDiv);
       }
       function startSession() {
         sessionEventLog.time.raf = [lastRafTime];
@@ -210,7 +207,6 @@
               const eventDiv = document.createElement("div");
               eventDiv.className = `touch ${type} ${event}`;
               eventDiv.style.top = top;
-              console.log(time - start);
               eventDiv.style.left = `${(time - start) * TIME_SCALE}px`;
               chart.appendChild(eventDiv);
             }
@@ -234,16 +230,13 @@
           if (event === "pointerdown") {
             if (!isSessionActive) {
               startSession();
+              e.target.setPointerCapture(e.pointerId);
             }
-          } else if (
-            event === "pointerup" ||
-            event === "pointercancel" ||
-            event === "pointerleave" ||
-            event === "pointerout"
-          ) {
+          } else if (event === "pointerup") {
             if (sessionEndTimer) {
               clearTimeout(sessionEndTimer);
             }
+            e.target.releasePointerCapture(e.pointerId);
             sessionEndTimer = setTimeout(endSession, 20);
           }
           if (isSessionActive) {
