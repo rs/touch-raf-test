@@ -41,12 +41,17 @@
         margin-top: 1em;
       }
 
-      #chart .raf {
+      #chart .raf-time, #chart .raf-event {
         width: 2px;
         height: 100%;
         position: absolute;
         background-color: #444;
         transform: translate(-50%, 0);
+      }
+
+      #chart .raf-event {
+        width: 1px;
+        background-color: #404040;
       }
 
       #chart .event {
@@ -95,7 +100,8 @@
     <script>
       const chart = document.getElementById("chart");
 
-      let lastRaf = 0;
+      let lastRafTime = 0;
+      let lastRafEvent = 0;
       const events = [
         "pointerdown",
         "pointermove",
@@ -108,7 +114,8 @@
       let isSessionActive = false;
       let sessionEndTimer = null;
       function startSession() {
-        sessionEventLog.raf = [lastRaf];
+        sessionEventLog['raf-time'] = [lastRafTime];
+        sessionEventLog['raf-event'] = [lastRafEvent];
         for (const event of events) {
           sessionEventLog[event] = [];
         }
@@ -131,15 +138,17 @@
           chart.removeChild(chart.firstChild);
         }
 
-        const start = sessionEventLog.raf[0] - 10;
-        const end = sessionEventLog.raf[sessionEventLog.raf.length - 1] + 10;
+        const start = sessionEventLog['raf-event'][0] - 10;
+        const end = sessionEventLog['raf-event'][sessionEventLog['raf-event'].length - 1] + 10;
         const duration = end - start;
 
-        for (const raf of sessionEventLog.raf) {
-          const rafDiv = document.createElement("div");
-          rafDiv.className = "raf";
-          rafDiv.style.left = `${((raf - start) / duration) * 100}%`;
-          chart.appendChild(rafDiv);
+        for (const rafType of ["raf-event", "raf-time"]) {
+          for (const raf of sessionEventLog[rafType]) {
+            const rafDiv = document.createElement("div");
+            rafDiv.className = rafType;
+            rafDiv.style.left = `${((raf - start) / duration) * 100}%`;
+            chart.appendChild(rafDiv);
+          }
         }
 
         const totalEvents = events.length;
@@ -161,9 +170,11 @@
       }
 
       requestAnimationFrame(function rAF(time) {
-        lastRaf = time;
+        lastRafEvent = performance.now();
+        lastRafTime = time;
         if (isSessionActive) {
-          sessionEventLog.raf.push(time);
+          sessionEventLog['raf-event'].push(lastRafEvent);
+          sessionEventLog['raf-time'].push(time);
         }
         requestAnimationFrame(rAF);
       });
