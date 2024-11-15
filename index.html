@@ -8,6 +8,7 @@
     font: 16px/1.5 sans-serif;
     background-color: #333;
     color: white;
+    overflow: hidden; /* Prevent scrolling */
   }
 
   h1 {
@@ -158,8 +159,10 @@
     requestAnimationFrame(rAF);
   });
 
+  // Prevent default behavior for touch and pointer events to avoid scrolling
   for (const event of events) {
-    document.body.addEventListener(event, function () {
+    document.body.addEventListener(event, function (e) {
+      e.preventDefault();
       if (event === "pointerdown" || event === "touchstart") {
         if (!isSessionActive) {
           startSession();
@@ -174,6 +177,6 @@
         const now = performance.now();
         sessionEventLog[event].push(now);
       }
-    });
+    }, { passive: false });
   }
 </script>
