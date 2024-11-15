@@ -27,7 +27,7 @@
 
       #chart {
         width: 100%;
-        height: 200px;
+        height: 230px;
         background-color: #222;
         position: relative;
       }
@@ -79,19 +79,14 @@
       #chart .pointerdown {
         background-color: greenyellow;
       }
-      #chart .pointermove {
+      #chart .pointermove,
+      #chart .pointerrawupdate {
         background-color: lightpink;
       }
-      #chart .pointerup {
-        background-color: lightcoral;
-      }
-      #chart .touchstart {
-        background-color: greenyellow;
-      }
-      #chart .touchmove {
-        background-color: lightpink;
-      }
-      #chart .touchend {
+      #chart .pointerup,
+      #chart .pointercancel,
+      #chart .pointerleave,
+      #chart .pointerout {
         background-color: lightcoral;
       }
 
@@ -117,7 +112,15 @@
       const TIME_MARGIN = 20;
       let lastRafTime = 0;
       let lastRafEvent = 0;
-      const events = ["pointerdown", "pointermove", "pointerup"];
+      const events = [
+        "pointerdown",
+        "pointermove",
+        "pointerrawupdate",
+        "pointerup",
+        "pointercancel",
+        "pointerleave",
+        "pointerout",
+      ];
       const sessionEventLog = {
         time: {},
         event: {},
@@ -214,11 +217,16 @@
           event,
           function (e) {
             e.preventDefault();
-            if (event === "pointerdown" || event === "touchstart") {
+            if (event === "pointerdown") {
               if (!isSessionActive) {
                 startSession();
               }
-            } else if (event === "pointerup" || event === "touchend") {
+            } else if (
+              event === "pointerup" ||
+              event === "pointercancel" ||
+              event === "pointerleave" ||
+              event === "pointerout"
+            ) {
               if (sessionEndTimer) {
                 clearTimeout(sessionEndTimer);
               }
