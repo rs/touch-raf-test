@@ -57,7 +57,7 @@
         transform: translate(-50%, 0);
       }
 
-      #chart .raf.time {
+      #chart .raf.actual {
         width: 2px;
         background-color: #444;
       }
@@ -82,7 +82,7 @@
         transform: translate(0, 13px);
       }
 
-      #chart .touch.time {
+      #chart .touch.actual {
         background-color: #444;
       }
 
@@ -124,9 +124,9 @@
       const chart = document.getElementById("chart");
       const tap = document.getElementById("tap");
 
-      const TIME_MARGIN = 20;
+      const TIME_MARGIN = 10;
       const TIME_SCALE = 2;
-      let lastRafTime = 0;
+      let lastRafActual = 0;
       let lastRafEvent = 0;
       const events = [
         "pointerdown",
@@ -135,10 +135,7 @@
         "pointerup",
       ];
       const totalEvents = events.length;
-      const sessionEventLog = {
-        time: {},
-        event: {},
-      };
+      const sessionEventLog = {};
       let isSessionActive = false;
       let sessionEndTimer = null;
       for (const event of events) {
@@ -150,11 +147,10 @@
         chartContainer.appendChild(eventDiv);
       }
       function startSession() {
-        sessionEventLog.time.raf = [lastRafTime];
-        sessionEventLog.event.raf = [lastRafEvent];
+        sessionEventLog.raf = [{ actual: lastRafActual, event: lastRafEvent }];
         for (const event of events) {
-          sessionEventLog.time[event] = [];
-          sessionEventLog.event[event] = [];
+          sessionEventLog[event] = [];
+          sessionEventLog[event] = [];
         }
         isSessionActive = true;
       }
@@ -175,40 +171,38 @@
           chart.removeChild(chart.firstChild);
         }
 
-        const start = sessionEventLog.event.raf[0] - TIME_MARGIN;
+        const start = sessionEventLog.raf[0].actual - TIME_MARGIN;
         const end =
-          sessionEventLog.event.raf[sessionEventLog.event.raf.length - 1] +
+          sessionEventLog.raf[sessionEventLog.raf.length - 1].event +
           TIME_MARGIN;
         const duration = end - start;
 
-        for (const type of ["time", "event"]) {
-          for (const raf of sessionEventLog[type].raf) {
+        for (const raf of sessionEventLog.raf) {
+          for (const type of ["actual", "event"]) {
             const rafDiv = document.createElement("div");
             rafDiv.className = `raf ${type}`;
-            rafDiv.style.left = `${(raf - start) * TIME_SCALE}px`;
+            rafDiv.style.left = `${(raf[type] - start) * TIME_SCALE}px`;
             chart.appendChild(rafDiv);
           }
         }
 
         for (const event of events) {
           const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
-          const totalTouches = sessionEventLog.time[event].length;
-          for (let i = 0; i < totalTouches; i++) {
-            const t1 = sessionEventLog.time[event][i];
-            const t2 = sessionEventLog.event[event][i];
+          const totalTouches = sessionEventLog[event].length;
+          for (const touch of sessionEventLog[event]) {
             const linkDiv = document.createElement("div");
             linkDiv.className = `touch-link`;
             linkDiv.style.top = top;
-            linkDiv.style.left = `${(t1 - start) * TIME_SCALE}px`;
-            linkDiv.style.width = `${(t2 - t1) * TIME_SCALE}px`;
+            linkDiv.style.left = `${(touch.actual - start) * TIME_SCALE}px`;
+            linkDiv.style.width = `${
+              (touch.event - touch.actual) * TIME_SCALE
+            }px`;
             chart.appendChild(linkDiv);
-          }
-          for (const type of ["time", "event"]) {
-            for (const time of sessionEventLog[type][event]) {
+            for (const type of ["actual", "event"]) {
               const eventDiv = document.createElement("div");
               eventDiv.className = `touch ${type} ${event}`;
               eventDiv.style.top = top;
-              eventDiv.style.left = `${(time - start) * TIME_SCALE}px`;
+              eventDiv.style.left = `${(touch[type] - start) * TIME_SCALE}px`;
               chart.appendChild(eventDiv);
             }
           }
@@ -217,10 +211,9 @@
 
       requestAnimationFrame(function rAF(time) {
         lastRafEvent = performance.now();
-        lastRafTime = time;
+        lastRafActual = time;
         if (isSessionActive) {
-          sessionEventLog.event.raf.push(lastRafEvent);
-          sessionEventLog.time.raf.push(time);
+          sessionEventLog.raf.push({ event: lastRafEvent, actual: time });
         }
         requestAnimationFrame(rAF);
       });
@@ -242,8 +235,7 @@
           }
           if (isSessionActive) {
             const now = performance.now();
-            sessionEventLog.event[event].push(now);
-            sessionEventLog.time[event].push(e.timeStamp);
+            sessionEventLog[event].push({ event: now, actual: e.timeStamp });
           }
         });
       }
