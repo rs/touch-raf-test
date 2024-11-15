@@ -43,6 +43,7 @@
 
       #chart-container .label {
         position: absolute;
+        pointer-events: none;
         color: #555;
         font-size: 0.8em;
         width: 100%;
@@ -123,7 +124,7 @@
       const tap = document.getElementById("tap");
 
       const TIME_MARGIN = 20;
-      const TIME_SCALE = 8;
+      const TIME_SCALE = 5;
       let lastRafTime = 0;
       let lastRafEvent = 0;
       const events = [
