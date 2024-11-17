@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <title>Touch rAF Tester</title>
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui, shrink-to-fit=no"
     />
-    <title>Touch rAF Tester</title>
     <style>
       body {
         margin: 0;
@@ -17,7 +17,8 @@
         font: 16px/1.5 sans-serif;
         background-color: #333;
         color: white;
-        overflow: hidden; /* Prevent scrolling */
+        overflow: hidden;
+        touch-action: none;
       }
 
       h1 {
@@ -27,9 +28,10 @@
 
       #chart-container {
         width: 100%;
-        height: 190px;
+        height: 250px;
         background-color: #222;
         position: relative;
+        flex-shrink: 0;
       }
 
       #chart {
@@ -52,9 +54,17 @@
       }
 
       #chart .raf {
-        height: 100%;
+        height: 145px;
         position: absolute;
         transform: translate(-50%, 0);
+      }
+
+      #chart .raf.time {
+        font-size: 0.4em;
+        font-weight: 100;
+        color: #444;
+        transform: translate(-100%, 0);
+        padding-right: 2px;
       }
 
       #chart .raf.actual {
@@ -65,6 +75,32 @@
       #chart .raf.event {
         width: 1px;
         background-color: #40404088;
+      }
+
+      #chart .defold {
+        top: 146px;
+        height: 104px;
+        position: absolute;
+        transform: translate(-50%, 0);
+      }
+
+      #chart .defold.time {
+        top: 146px;
+        font-size: 0.4em;
+        font-weight: 100;
+        color: #444;
+        transform: translate(-100%, 0);
+        padding-right: 2px;
+      }
+
+      #chart .defold.update {
+        width: 2px;
+        background-color: #444;
+      }
+
+      #chart .defold.fixed-update {
+        width: 4px;
+        background-color: #666;
       }
 
       #chart .touch {
@@ -82,25 +118,32 @@
         transform: translate(0, 13px);
       }
 
+      #chart .touch.time {
+        font-size: 0.4em;
+        font-weight: 100;
+        color: #666;
+        transform: translate(-50%, 20px);
+      }
+
       #chart .touch.actual {
         background-color: #444;
       }
 
-      #chart .pointerdown {
+      #chart .pointerdown,
+      #chart .defoldpress {
         background-color: greenyellow;
       }
       #chart .pointermove,
-      #chart .pointerrawupdate {
+      #chart .pointerrawupdate,
+      #chart .defoldmove {
         background-color: lightpink;
       }
       #chart .pointerup,
-      #chart .pointercancel,
-      #chart .pointerleave,
-      #chart .pointerout {
+      #chart .defoldrelease {
         background-color: lightcoral;
       }
 
-      #tap {
+      #app-container {
         width: 100%;
         display: flex;
         flex-grow: 1;
@@ -109,6 +152,16 @@
         font-size: 2em;
         user-select: none;
         touch-action: none;
+        position: relative;
+      }
+
+      #canvas-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
       }
     </style>
   </head>
@@ -117,22 +170,35 @@
     <div id="chart-container">
       <div id="chart"></div>
     </div>
-    <div id="tap">Tap Here</div>
+    <div id="app-container">
+      Tap Here
+      <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+    <script src="dmloader.js"></script>
 
     <script>
+      EngineLoader.load("canvas", "touchdebug");
+
       const chartContainer = document.getElementById("chart-container");
       const chart = document.getElementById("chart");
-      const tap = document.getElementById("tap");
+      const tap = document.getElementById("app-container");
 
       const TIME_MARGIN = 10;
-      const TIME_SCALE = 2;
+      const TIME_SCALE = 4;
       let lastRafActual = 0;
       let lastRafEvent = 0;
+      let lastDefoldUpdate = 0;
+      let lastDefoldFixedUpdate = 0;
       const events = [
         "pointerdown",
         "pointermove",
         "pointerrawupdate",
         "pointerup",
+        "defoldpress",
+        "defoldmove",
+        "defoldrelease",
       ];
       const totalEvents = events.length;
       const sessionEventLog = {};
@@ -148,6 +214,10 @@
       }
       function startSession() {
         sessionEventLog.raf = [{ actual: lastRafActual, event: lastRafEvent }];
+        sessionEventLog.defold = {
+          update: [lastDefoldUpdate],
+          ["fixed-update"]: [lastDefoldFixedUpdate],
+        };
         for (const event of events) {
           sessionEventLog[event] = [];
           sessionEventLog[event] = [];
@@ -178,6 +248,11 @@
         const duration = end - start;
 
         for (const raf of sessionEventLog.raf) {
+          const rafTimeDiv = document.createElement("div");
+          rafTimeDiv.className = `raf time`;
+          rafTimeDiv.style.left = `${(raf.actual - start) * TIME_SCALE}px`;
+          rafTimeDiv.textContent = `${Math.round(raf.actual - start)}ms`;
+          chart.appendChild(rafTimeDiv);
           for (const type of ["actual", "event"]) {
             const rafDiv = document.createElement("div");
             rafDiv.className = `raf ${type}`;
@@ -186,25 +261,52 @@
           }
         }
 
+        for (const type of ["fixed-update", "update"]) {
+          for (const defoldUpdate of sessionEventLog.defold[type]) {
+            if (type === "update") {
+              const defoldDiv = document.createElement("div");
+              defoldDiv.className = `defold time`;
+              defoldDiv.style.left = `${(defoldUpdate - start) * TIME_SCALE}px`;
+              defoldDiv.textContent = `${Math.round(defoldUpdate - start)}ms`;
+              chart.appendChild(defoldDiv);
+            }
+            const defoldDiv = document.createElement("div");
+            defoldDiv.className = `defold ${type}`;
+            defoldDiv.style.left = `${(defoldUpdate - start) * TIME_SCALE}px`;
+            chart.appendChild(defoldDiv);
+          }
+        }
+
         for (const event of events) {
           const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
           const totalTouches = sessionEventLog[event].length;
           for (const touch of sessionEventLog[event]) {
-            const linkDiv = document.createElement("div");
-            linkDiv.className = `touch-link`;
-            linkDiv.style.top = top;
-            linkDiv.style.left = `${(touch.actual - start) * TIME_SCALE}px`;
-            linkDiv.style.width = `${
-              (touch.event - touch.actual) * TIME_SCALE
-            }px`;
-            chart.appendChild(linkDiv);
+            if (touch.actual) {
+              const linkDiv = document.createElement("div");
+              linkDiv.className = `touch-link`;
+              linkDiv.style.top = top;
+              linkDiv.style.left = `${(touch.actual - start) * TIME_SCALE}px`;
+              linkDiv.style.width = `${
+                (touch.event - touch.actual) * TIME_SCALE
+              }px`;
+              chart.appendChild(linkDiv);
+            }
             for (const type of ["actual", "event"]) {
+              if (!touch[type]) {
+                continue;
+              }
               const eventDiv = document.createElement("div");
               eventDiv.className = `touch ${type} ${event}`;
               eventDiv.style.top = top;
               eventDiv.style.left = `${(touch[type] - start) * TIME_SCALE}px`;
               chart.appendChild(eventDiv);
             }
+            const timeDiv = document.createElement("div");
+            timeDiv.className = `touch time`;
+            timeDiv.style.top = top;
+            timeDiv.style.left = `${(touch.event - start) * TIME_SCALE}px`;
+            timeDiv.textContent = `${Math.round(touch.event - start)}ms`;
+            chart.appendChild(timeDiv);
           }
         }
       }
@@ -218,26 +320,54 @@
         requestAnimationFrame(rAF);
       });
 
-      for (const event of events) {
-        tap.addEventListener(event, function (e) {
-          e.preventDefault();
-          if (event === "pointerdown") {
-            if (!isSessionActive) {
-              startSession();
-              e.target.setPointerCapture(e.pointerId);
-            }
-          } else if (event === "pointerup") {
-            if (sessionEndTimer) {
-              clearTimeout(sessionEndTimer);
-            }
-            e.target.releasePointerCapture(e.pointerId);
-            sessionEndTimer = setTimeout(endSession, 20);
+      function handleSessionStartStop(event) {
+        if (event === "pointerdown" || event === "defoldpress") {
+          if (!isSessionActive) {
+            startSession();
           }
+        } else if (event === "pointerup" || event === "defoldrelease") {
+          if (sessionEndTimer) {
+            clearTimeout(sessionEndTimer);
+          }
+          sessionEndTimer = setTimeout(endSession, 20);
+        }
+      }
+
+      for (const event of events) {
+        if (event.startsWith("defold")) {
+          continue;
+        }
+        tap.addEventListener(event, function (e) {
+          handleSessionStartStop(event);
           if (isSessionActive) {
             const now = performance.now();
             sessionEventLog[event].push({ event: now, actual: e.timeStamp });
           }
         });
+      }
+
+      function onDefoldUpdate() {
+        lastDefoldUpdate = performance.now();
+        if (isSessionActive) {
+          sessionEventLog.defold.update.push(lastDefoldUpdate);
+        }
+      }
+      function onDefoldFixedUpdate() {
+        lastDefoldFixedUpdate = performance.now();
+        if (isSessionActive) {
+          sessionEventLog.defold["fixed-update"].push(lastDefoldFixedUpdate);
+        }
+      }
+      function onDefoldInput(pressed, released) {
+        handleSessionStartStop(event);
+        if (isSessionActive) {
+          const event = pressed
+            ? "defoldpress"
+            : released
+            ? "defoldrelease"
+            : "defoldmove";
+          sessionEventLog[event].push({ event: performance.now() });
+        }
       }
     </script>
   </body>
