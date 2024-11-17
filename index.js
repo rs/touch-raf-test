@@ -41,6 +41,7 @@ function startSession() {
         sessionEventLog[event] = [];
     }
     isSessionActive = true;
+    chart.scrollTo(0, 0);
 }
 
 function endSession() {
@@ -55,16 +56,21 @@ function endSession() {
     renderSession();
 }
 
-function renderSession() {
-    while (chart.firstChild) {
-        chart.removeChild(chart.firstChild);
-    }
-
+function sessionBoundaries() {
     const start = sessionEventLog.raf[0].actual - TIME_MARGIN;
     const end =
         sessionEventLog.raf[sessionEventLog.raf.length - 1].event +
         TIME_MARGIN;
     const duration = end - start;
+    return { start, end, duration };
+}
+
+function renderSession() {
+    while (chart.firstChild) {
+        chart.removeChild(chart.firstChild);
+    }
+
+    const { start, end } = sessionBoundaries();
 
     for (const raf of sessionEventLog.raf) {
         const rafTimeDiv = document.createElement("div");
@@ -97,13 +103,18 @@ function renderSession() {
     }
 
     for (const event of events) {
-        const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
+        const top = (events.indexOf(event) / totalEvents) * 100;
         const totalTouches = sessionEventLog[event].length;
-        for (const touch of sessionEventLog[event]) {
+        for (let i = 0; i < sessionEventLog[event].length; i++) {
+            const touch = sessionEventLog[event][i];
+            let touchTop = `${top}%`;
+            if (event === "pointermove" || event === "pointerrawupdate") {
+                touchTop = `${top + (i % 2 === 0 ? -2 : 2)}%`;
+            }
             if (touch.actual) {
                 const linkDiv = document.createElement("div");
                 linkDiv.className = `touch-link`;
-                linkDiv.style.top = top;
+                linkDiv.style.top = touchTop;
                 linkDiv.style.left = `${(touch.actual - start) * timeScale}px`;
                 linkDiv.style.width = `${(touch.event - touch.actual) * timeScale
                     }px`;
@@ -115,13 +126,13 @@ function renderSession() {
                 }
                 const eventDiv = document.createElement("div");
                 eventDiv.className = `touch ${type} ${event}`;
-                eventDiv.style.top = top;
+                eventDiv.style.top = touchTop;
                 eventDiv.style.left = `${(touch[type] - start) * timeScale}px`;
                 chart.appendChild(eventDiv);
             }
             const timeDiv = document.createElement("div");
             timeDiv.className = `touch time`;
-            timeDiv.style.top = top;
+            timeDiv.style.top = touchTop;
             timeDiv.style.left = `${(touch.event - start) * timeScale}px`;
             timeDiv.textContent = `${Math.round(touch.event - start)}ms`;
             chart.appendChild(timeDiv);
@@ -210,9 +221,16 @@ chartContainer.addEventListener('touchmove', (e) => {
         e.preventDefault();
         const newDistance = getDistance(e.touches[0], e.touches[1]);
         const scaleChange = newDistance / pinchLastDistance;
+        const prevTimeScale = timeScale;
         timeScale = Math.max(Math.min(timeScale * scaleChange, 20), 1);
         pinchLastDistance = newDistance;
         needsRerender = true;
+
+        // Keep the zoomed area centered
+        const centerBeforeZoom = chart.scrollLeft + chart.clientWidth / 2;
+        const centerTimeBeforeZoom = centerBeforeZoom / prevTimeScale;
+        const centerAfterZoom = centerTimeBeforeZoom * timeScale;
+        chart.scrollLeft = centerAfterZoom - chart.clientWidth / 2;
     }
 }, true);
 
