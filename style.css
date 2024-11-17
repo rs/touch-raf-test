@@ -1,0 +1,155 @@
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font: 16px/1.5 sans-serif;
+  background-color: #333;
+  color: white;
+  overflow: hidden;
+  touch-action: none;
+}
+
+h1 {
+  text-align: center;
+  font-weight: 500;
+}
+
+#chart-container {
+  width: 100%;
+  height: 250px;
+  background-color: #222;
+  position: relative;
+  flex-shrink: 0;
+}
+
+#chart {
+  position: absolute;
+  overflow-x: scroll;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+#chart-container .label {
+  position: absolute;
+  pointer-events: none;
+  color: #555;
+  font-size: 0.8em;
+  width: 100%;
+  border-bottom: 1px solid #333;
+  margin-top: 20px;
+}
+
+#chart .raf {
+  height: 145px;
+  position: absolute;
+  transform: translate(-50%, 0);
+}
+
+#chart .raf.time {
+  font-size: 0.4em;
+  font-weight: 100;
+  color: #444;
+  transform: translate(-100%, 0);
+  padding-right: 2px;
+}
+
+#chart .raf.actual {
+  width: 2px;
+  background-color: #444;
+}
+
+#chart .raf.event {
+  width: 1px;
+  background-color: #40404088;
+}
+
+#chart .defold {
+  top: 146px;
+  height: 104px;
+  position: absolute;
+  transform: translate(-50%, 0);
+}
+
+#chart .defold.time {
+  top: 146px;
+  font-size: 0.4em;
+  font-weight: 100;
+  color: #444;
+  transform: translate(-100%, 0);
+  padding-right: 2px;
+}
+
+#chart .defold.update {
+  width: 2px;
+  background-color: #444;
+}
+
+#chart .defold.fixed-update {
+  width: 4px;
+  background-color: #666;
+}
+
+#chart .touch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-4px, 10px);
+  position: absolute;
+}
+
+#chart .touch-link {
+  position: absolute;
+  height: 2px;
+  background-color: #444;
+  transform: translate(0, 13px);
+}
+
+#chart .touch.time {
+  font-size: 0.4em;
+  font-weight: 100;
+  color: #666;
+  transform: translate(-50%, 20px);
+}
+
+#chart .touch.actual {
+  background-color: #444;
+}
+
+#chart .pointerdown,
+#chart .defoldpress {
+  background-color: greenyellow;
+}
+#chart .pointermove,
+#chart .pointerrawupdate,
+#chart .defoldmove {
+  background-color: lightpink;
+}
+#chart .pointerup,
+#chart .defoldrelease {
+  background-color: lightcoral;
+}
+
+#app-container {
+  width: 100%;
+  display: flex;
+  flex-grow: 1;
+  justify-content: center;
+  align-items: center;
+  font-size: 2em;
+  user-select: none;
+  touch-action: none;
+  position: relative;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
