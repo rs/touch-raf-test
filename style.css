@@ -97,26 +97,34 @@ body * {
 }
 
 #chart .touch {
+  position: absolute;
+}
+
+#chart .touch.dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   transform: translate(-4px, 20px);
-  position: absolute;
 }
 
-#chart .touch-link {
+#chart .touch.dot.actual {
+  background-color: #444;
+}
+
+#chart .touch.link {
   position: absolute;
   height: 2px;
   background-color: #444;
-  transform: translate(0, 24px);
+  transform: translate(0, 23px);
 }
 
-#chart .touch.time {
-  transform: translate(-100%, 30px);
+#chart .touch.event.time {
+  transform: translate(-50%, 30px);
 }
 
-#chart .touch.actual {
-  background-color: #444;
+#chart .touch.actual.time {
+  transform: translate(-100%, 19px);
+  padding-right: 6px;
 }
 
 #chart .pointerdown,

@@ -113,7 +113,7 @@ function renderSession() {
             }
             if (touch.actual) {
                 const linkDiv = document.createElement("div");
-                linkDiv.className = `touch-link`;
+                linkDiv.className = 'touch link';
                 linkDiv.style.top = touchTop;
                 linkDiv.style.left = `${(touch.actual - start) * timeScale}px`;
                 linkDiv.style.width = `${(touch.event - touch.actual) * timeScale
@@ -125,17 +125,20 @@ function renderSession() {
                     continue;
                 }
                 const eventDiv = document.createElement("div");
-                eventDiv.className = `touch ${type} ${event}`;
+                eventDiv.className = `touch ${type} ${event} dot`;
                 eventDiv.style.top = touchTop;
                 eventDiv.style.left = `${(touch[type] - start) * timeScale}px`;
                 chart.appendChild(eventDiv);
+
+                if (type === 'event' || (touch.event - touch.actual) > 0) {
+                    const timeDiv = document.createElement("div");
+                    timeDiv.className = `touch ${type} time`;
+                    timeDiv.style.top = touchTop;
+                    timeDiv.style.left = `${(touch[type] - start) * timeScale}px`;
+                    timeDiv.textContent = `${Math.round(touch[type] - start)}ms`;
+                    chart.appendChild(timeDiv);
+                }
             }
-            const timeDiv = document.createElement("div");
-            timeDiv.className = `touch time`;
-            timeDiv.style.top = touchTop;
-            timeDiv.style.left = `${(touch.event - start) * timeScale}px`;
-            timeDiv.textContent = `${Math.round(touch.event - start)}ms`;
-            chart.appendChild(timeDiv);
         }
     }
 }
