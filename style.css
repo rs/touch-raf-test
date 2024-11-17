@@ -43,6 +43,10 @@ h1 {
   margin-top: 20px;
 }
 
+#chart * {
+  pointer-events: none;
+}
+
 #chart .raf {
   height: 145px;
   position: absolute;
