@@ -22,6 +22,7 @@ const totalEvents = events.length;
 const sessionEventLog = {};
 let isSessionActive = false;
 let sessionEndTimer = null;
+
 for (const event of events) {
     const top = `${(events.indexOf(event) / totalEvents) * 100}%`;
     const eventDiv = document.createElement("div");
@@ -30,6 +31,7 @@ for (const event of events) {
     eventDiv.textContent = event;
     chartContainer.appendChild(eventDiv);
 }
+
 function startSession() {
     sessionEventLog.raf = [{ actual: lastRafActual, event: lastRafEvent }];
     sessionEventLog.defold = {
@@ -197,13 +199,13 @@ function onDefoldFixedUpdate() {
 }
 
 function onDefoldInput(pressed, released) {
+    const event = pressed
+        ? "defoldpress"
+        : released
+            ? "defoldrelease"
+            : "defoldmove";
     handleSessionStartStop(event);
     if (isSessionActive) {
-        const event = pressed
-            ? "defoldpress"
-            : released
-                ? "defoldrelease"
-                : "defoldmove";
         sessionEventLog[event].push({ event: performance.now() });
     }
 }
