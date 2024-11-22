@@ -23,6 +23,17 @@
     <script src="dmloader.js"></script>
     <script>
       EngineLoader.load("canvas", "touchdebug");
+
+      setTimeout(() => {
+        const iosBridge = window.webkit?.messageHandlers;
+        const androidBridge = window.nfandroid;
+
+        if (typeof iosBridge !== "undefined") {
+          iosBridge.loadingCompleted.postMessage({});
+        } else if (typeof androidBridge !== "undefined") {
+          androidBridge.loadingCompleted();
+        }
+      }, 500);
     </script>
   </body>
 </html>
