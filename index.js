@@ -2,7 +2,7 @@ const chartContainer = document.getElementById("chart-container");
 const chart = document.getElementById("chart");
 const tap = document.getElementById("app-container");
 
-const TIME_MARGIN = 10;
+let MARGIN_PX = 50;
 let timeScale = 4;
 let lastRafActual = 0;
 let lastRafEvent = 0;
@@ -59,10 +59,9 @@ function endSession() {
 }
 
 function sessionBoundaries() {
-    const start = sessionEventLog.raf[0].actual - TIME_MARGIN;
+    const start = sessionEventLog.raf[0].actual;
     const end =
-        sessionEventLog.raf[sessionEventLog.raf.length - 1].event +
-        TIME_MARGIN;
+        sessionEventLog.raf[sessionEventLog.raf.length - 1].event;
     const duration = end - start;
     return { start, end, duration };
 }
@@ -77,13 +76,13 @@ function renderSession() {
     for (const raf of sessionEventLog.raf) {
         const rafTimeDiv = document.createElement("div");
         rafTimeDiv.className = `raf time`;
-        rafTimeDiv.style.left = `${(raf.actual - start) * timeScale}px`;
+        rafTimeDiv.style.left = `${((raf.actual - start) * timeScale) + MARGIN_PX}px`;
         rafTimeDiv.textContent = `${Math.round(raf.actual - start)}ms`;
         chart.appendChild(rafTimeDiv);
         for (const type of ["actual", "event"]) {
             const rafDiv = document.createElement("div");
             rafDiv.className = `raf ${type}`;
-            rafDiv.style.left = `${(raf[type] - start) * timeScale}px`;
+            rafDiv.style.left = `${((raf[type] - start) * timeScale) + MARGIN_PX}px`;
             chart.appendChild(rafDiv);
         }
     }
@@ -93,13 +92,13 @@ function renderSession() {
             if (type === "update") {
                 const defoldDiv = document.createElement("div");
                 defoldDiv.className = `defold time`;
-                defoldDiv.style.left = `${(defoldUpdate - start) * timeScale}px`;
+                defoldDiv.style.left = `${((defoldUpdate - start) * timeScale) + MARGIN_PX}px`;
                 defoldDiv.textContent = `${Math.round(defoldUpdate - start)}ms`;
                 chart.appendChild(defoldDiv);
             }
             const defoldDiv = document.createElement("div");
             defoldDiv.className = `defold ${type}`;
-            defoldDiv.style.left = `${(defoldUpdate - start) * timeScale}px`;
+            defoldDiv.style.left = `${((defoldUpdate - start) * timeScale) + MARGIN_PX}px`;
             chart.appendChild(defoldDiv);
         }
     }
@@ -111,13 +110,13 @@ function renderSession() {
             const touch = sessionEventLog[event][i];
             let touchTop = `${top}%`;
             if (event === "pointermove" || event === "pointerrawupdate") {
-                touchTop = `${top + (i % 2 === 0 ? -2 : 2)}%`;
+                touchTop = `${top + (i % 2 === 0 ? -3 : 2.5)}%`;
             }
             if (touch.actual) {
                 const linkDiv = document.createElement("div");
                 linkDiv.className = 'touch link';
                 linkDiv.style.top = touchTop;
-                linkDiv.style.left = `${(touch.actual - start) * timeScale}px`;
+                linkDiv.style.left = `${((touch.actual - start) * timeScale) + MARGIN_PX}px`;
                 linkDiv.style.width = `${(touch.event - touch.actual) * timeScale
                     }px`;
                 chart.appendChild(linkDiv);
@@ -129,14 +128,14 @@ function renderSession() {
                 const eventDiv = document.createElement("div");
                 eventDiv.className = `touch ${type} ${event} dot`;
                 eventDiv.style.top = touchTop;
-                eventDiv.style.left = `${(touch[type] - start) * timeScale}px`;
+                eventDiv.style.left = `${((touch[type] - start) * timeScale) + MARGIN_PX}px`;
                 chart.appendChild(eventDiv);
 
                 if (type === 'event' || (touch.event - touch.actual) > 0) {
                     const timeDiv = document.createElement("div");
                     timeDiv.className = `touch ${type} time`;
                     timeDiv.style.top = touchTop;
-                    timeDiv.style.left = `${(touch[type] - start) * timeScale}px`;
+                    timeDiv.style.left = `${((touch[type] - start) * timeScale) + MARGIN_PX}px`;
                     timeDiv.textContent = `${Math.round(touch[type] - start)}ms`;
                     chart.appendChild(timeDiv);
                 }
