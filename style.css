@@ -30,7 +30,7 @@ body * {
   font-size: 0.8em;
   width: 100%;
   border-bottom: 1px solid #333;
-  margin-top: 45px;
+  margin-top: 25px;
 }
 
 #chart {
@@ -47,7 +47,7 @@ body * {
 }
 
 #chart .raf {
-  height: 257px;
+  height: 180px;
   position: absolute;
   transform: translate(-50%, 0);
 }
@@ -74,14 +74,14 @@ body * {
 }
 
 #chart .defold {
-  top: 257px;
-  height: 192px;
+  top: 180px;
+  height: 269px;
   position: absolute;
   transform: translate(-50%, 0);
 }
 
 #chart .defold.time {
-  top: 257px;
+  top: 180px;
   transform: translate(-100%, 0);
   padding-right: 4px;
 }
@@ -128,15 +128,18 @@ body * {
 }
 
 #chart .pointerdown,
+#chart .jstodefpress,
 #chart .defoldpress {
   background-color: greenyellow;
 }
 #chart .pointermove,
 #chart .pointerrawupdate,
+#chart .jstodefmove,
 #chart .defoldmove {
   background-color: lightpink;
 }
 #chart .pointerup,
+#chart .jstodefrelease,
 #chart .defoldrelease {
   background-color: lightcoral;
 }

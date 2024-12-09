@@ -17,4 +17,5 @@ scale_mode = stretch
 
 [project]
 title = touch-debug
+dependencies#0 = https://github.com/AGulev/jstodef/archive/refs/tags/3.0.0.zip
 
