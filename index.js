@@ -14,6 +14,9 @@ const events = [
     "pointermove",
     "pointerrawupdate",
     "pointerup",
+    "jstodefpress",
+    "jstodefmove",
+    "jstodefrelease",
     "defoldpress",
     "defoldmove",
     "defoldrelease",
@@ -109,8 +112,8 @@ function renderSession() {
         for (let i = 0; i < sessionEventLog[event].length; i++) {
             const touch = sessionEventLog[event][i];
             let touchTop = `${top}%`;
-            if (event === "pointermove" || event === "pointerrawupdate") {
-                touchTop = `${top + (i % 2 === 0 ? -3 : 2.5)}%`;
+            if (event === "pointermove" || event === "pointerrawupdate" || event === "jstodefmove") {
+                touchTop = `${top + (i % 2 === 0 ? -2 : 1.5)}%`;
             }
             if (touch.actual) {
                 const linkDiv = document.createElement("div");
@@ -158,11 +161,11 @@ requestAnimationFrame(function rAF(time) {
 });
 
 function handleSessionStartStop(event) {
-    if (event === "pointerdown" || event === "defoldpress") {
+    if (event === "pointerdown" || event === "defoldpress" || event === "jstodefpress") {
         if (!isSessionActive) {
             startSession();
         }
-    } else if (event === "pointerup" || event === "defoldrelease") {
+    } else if (event === "pointerup" || event === "defoldrelease" || event === "jstodefrelease") {
         if (sessionEndTimer) {
             clearTimeout(sessionEndTimer);
         }
@@ -171,7 +174,7 @@ function handleSessionStartStop(event) {
 }
 
 for (const event of events) {
-    if (event.startsWith("defold")) {
+    if (event.startsWith("defold") || event.startsWith("jstodef")) {
         continue;
     }
     tap.addEventListener(event, function(e) {
@@ -179,6 +182,10 @@ for (const event of events) {
         if (isSessionActive) {
             const now = performance.now();
             sessionEventLog[event].push({ event: now, actual: e.timeStamp });
+        }
+
+        if (["pointerdown", "pointermove", "pointerup"].includes(event)) {
+            JsToDef.send(event, e.timeStamp);
         }
     });
 }
@@ -206,6 +213,18 @@ function onDefoldInput(pressed, released) {
     handleSessionStartStop(event);
     if (isSessionActive) {
         sessionEventLog[event].push({ event: performance.now() });
+    }
+}
+
+function onJsToDefInput(pressed, released, actual) {
+    const event = pressed
+        ? "jstodefpress"
+        : released
+            ? "jstodefrelease"
+            : "jstodefmove";
+    handleSessionStartStop(event);
+    if (isSessionActive) {
+        sessionEventLog[event].push({ event: performance.now(), actual });
     }
 }
 
