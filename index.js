@@ -112,8 +112,8 @@ function renderSession() {
         for (let i = 0; i < sessionEventLog[event].length; i++) {
             const touch = sessionEventLog[event][i];
             let touchTop = `${top}%`;
-            if (event === "pointermove" || event === "pointerrawupdate") {
-                touchTop = `${top + (i % 2 === 0 ? -3 : 2.5)}%`;
+            if (event === "pointermove" || event === "pointerrawupdate" || event === "jstodefmove") {
+                touchTop = `${top + (i % 2 === 0 ? -2 : 1.5)}%`;
             }
             if (touch.actual) {
                 const linkDiv = document.createElement("div");
